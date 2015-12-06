@@ -18,7 +18,7 @@ parameters
 ```
 [
   {
-    "version": "0.1",
+    "v": "0.1",
     "token": "token12345", // ユーザーを一意に特定するためのトークン
     "user": {
     	"name": "Taro Yamada",
@@ -51,7 +51,7 @@ dayまで指定すると、その日だけ取ってくる。
 ```
 [
   {
-    "version": "0.1",
+    "v": "0.1",
     // 一ヶ月分のカレンダーと各イベントの状態
     "days": {
         {
@@ -155,7 +155,6 @@ dayまで指定すると、その日だけ取ってくる。
         "next" : { "method": "GET", "href": "/calender/v/0.1/group/group12345/year/2016/month/1" },
         "prev" : { "method": "GET", "href": "/calender/v/0.1/group/group12345/year/2015/month/11" },
         "logout" : { "method": "GET", "href": "/logout/v/0.1/token/token12345" },
-        "me" : { ""method": "GET", href": "/me/v/0.1/token/token12345" },
     },
     "_embeded": "",
   }
@@ -179,7 +178,7 @@ parameters
 ```
 [
   {
-    "version": "0.1",
+    "v": "0.1",
     "result" : "success",
     "days": {       // 参加指定日の登録後状態
     {
@@ -229,10 +228,7 @@ parameters
         }
     },
     "_links": {
-        "self": { "href": "/join/v/{verion}/year/{year}/month/{month}/day/{day}/token/{token}" },
-        "calendar" : { "href": "/calender/v/0.1/" },
-        "logout" : { "href": "/logout" },
-        "me" : { "href": "/me/v/0.1/token/{token}" },
+        "self" : { "method": "GET", "href": "/calender/v/0.1/group/group12345/year/2015/month/12/day/1" },
     },
     "_embeded": "",
   }
@@ -244,7 +240,7 @@ parameters
 ```
 [
   {
-    "version": "0.1",
+    "v": "0.1",
     "user" : {
     	"name": "Taro Yamada",
     	"email": "hogehoge@example.com",
