@@ -4,16 +4,27 @@
 
 ### ログイン [POST /login]
 
-parameters
+* header
 
-|parameter|value|
-|:--------|:----|
-|v|バージョン|
-|name|ユーザー名|
-|email|メールアドレス|
-|group|グループID|
+|key|value|
+|:--|:----|
+|Content-Type|application/json|
+|X-Meshido-ApiVerion|1.0|
+
+
+* parameters
+
+```
+{
+	"name": "String",
+	"email": "String",
+	"group": "String"
+}
+```
 
 ※グループIDは事前にサーバー側で発行し、ユーザーは何かしらの方法で知っている前提
+
+* response
 
 ```
 [
@@ -25,18 +36,36 @@ parameters
     	"email": "foo@example.com",
     }
     "_links": {
-        "self" : { "method": "GET", href": "/me/v/0.1/token/token12345" },
-        "calendar" : { "method": "GET", "href": "/calender/v/0.1/group/group12345" },
-        "logout" : { "method": "GET", "href": "/logout/v/0.1/token/token12345" },
+        "self" : { 
+        	"method": "GET",
+        	"href": "/me",
+        	"headers": {
+				"Content-Type": "application/json",
+				"X-Meshido-ApiVerion": "1.0",
+				"X-Meshido-UsrToken" : "token12345"
+        	},
+        	"parameters" : ""
+        }
     },
     "_embeded": "",
   }
 ]
 ```
 
-### カレンダー [GET /calender/v/{version}/group/{group}]
+### カレンダー [GET /group/{group}/calender]
 
 現在月の予定一覧を取得する。
+
+
+* header
+
+|key|value|
+|:--|:----|
+|Content-Type|Application/json|
+|X-Meshido-ApiVerion|1.0|
+|X-Meshido-UserToken|[/login]で取得したtoken|
+
+* parameters
 
 optional
 
@@ -66,14 +95,17 @@ dayまで指定すると、その日だけ取ってくる。
                         "join" :  {
                             "method": "POST",
                             "href": "/join",
+				        	"headers": {
+								"Content-Type": "application/json",
+								"X-Meshido-ApiVerion": "1.0",
+								"X-Meshido-UsrToken" : "token12345"
+				        	},
                             "parameters": {
-                                "v": 0.1,
                                 "group": "group12345",
                                 "year": 2015,
                                 "month": 12,
                                 "day": 1,
-                                "eventType": "lunch",
-                                "token": "token12345"
+                                "eventType": "lunch"
                             }
                         },
                     }
@@ -86,75 +118,55 @@ dayまで指定すると、その日だけ取ってくる。
                         "join" :  {
                             "method": "POST",
                             "href": "/join",
+				        	"headers": {
+								"Content-Type": "application/json",
+								"X-Meshido-ApiVerion": "1.0",
+								"X-Meshido-UsrToken" : "token12345"
+				        	},
                             "parameters": {
-                                "v": 0.1,
                                 "group": "group12345",
                                 "year": 2015,
                                 "month": 12,
                                 "day": 1,
-                                "eventType": "dinner",
-                                "token": "token12345"
+                                "eventType": "dinner"
                             }
                         },
                     }
                 }
             }
         },
-        {
-            "dayOfMonth": 2,
-            "weekday": "MON",
-            "events" {
-                "lunch" : {
-                    "hasJoined" : "false",
-                    "isFixed" : "true",
-                    "participantCount" : "3",
-                    "_links" {
-                        "join" :  {
-                            "method": "POST",
-                            "href": "/join",
-                            "parameters": {
-                                "v": 0.1,
-                                "group": "group12345",
-                                "year": 2015,
-                                "month": 12,
-                                "day": 2,
-                                "eventType": "lunch",
-                                "token": "token12345"
-                            }
-                        },
-                    }
-                }
-                "dinner" : {
-                    "hasJoined" : "false",
-                    "isFixed" : "true",
-                    "participantCount" : "5",
-                    "_links" {
-                        "join" :  {
-                            "method": "POST",
-                            "href": "/join",
-                            "parameters": {
-                                "v": 0.1,
-                                "group": "group12345",
-                                "year": 2015,
-                                "month": 12,
-                                "day": 2,
-                                "eventType": "dinner",
-                                "token": "token12345"
-                            }
-                        },
-                    }
-                }
-            }
-        }
         :
         : // 一ヶ月分
         :
     },
     "_links": {
-        "self" : { "method": "GET", "href": "/calender/v/0.1/group/group12345/year/2015/month/12" },
-        "next" : { "method": "GET", "href": "/calender/v/0.1/group/group12345/year/2016/month/1" },
-        "prev" : { "method": "GET", "href": "/calender/v/0.1/group/group12345/year/2015/month/11" },
-        "logout" : { "method": "GET", "href": "/logout/v/0.1/token/token12345" },
+        "self" : { 
+        	"method": "GET",
+        	"href": "/group/group12345/calender/year/2015/month/12",
+        	"headers": {
+				"Content-Type": "application/json",
+				"X-Meshido-ApiVerion": "1.0",
+				"X-Meshido-UsrToken" : "token12345"
+        	}
+    	},
+        "next" : { 
+        	"method": "GET",
+        	"href": "/group/group12345/calender/year/2016/month/1",
+        	"headers": {
+				"Content-Type": "application/json",
+				"X-Meshido-ApiVerion": "1.0",
+				"X-Meshido-UsrToken" : "token12345"
+        	}
+    	},
+        "prev" : { 
+        	"method": "GET",
+        	"href": "/group/group12345/calender/year/2015/month/11",
+        	"headers": {
+				"Content-Type": "application/json",
+				"X-Meshido-ApiVerion": "1.0",
+				"X-Meshido-UsrToken" : "token12345"
+        	}
+    	},
     },
     "_embeded": "",
   }
@@ -163,17 +175,29 @@ dayまで指定すると、その日だけ取ってくる。
 
 ### 参加 [POST /join]
 
-parameters
 
-|parameter|value|
-|:--------|:----|
-|v|バージョン|
-|group|グループID|
-|year|参加対象年|
-|month|参加対象月|
-|day|参加対象日|
-|eventType|イベントタイプ(lunch/dinner)|
-|token|トークン|
+* header
+
+|key|value|
+|:--|:----|
+|Content-Type|Application/json|
+|X-Meshido-ApiVerion|1.0|
+|X-Meshido-UserToken|[/login]で取得したtoken|
+
+* parameters
+
+```
+{
+	"group":"String",
+	"year":"Number",
+	"month":"Number",
+	"day":"Number",
+	"eventType":"String[lunch/dinner]"
+}
+
+```
+
+* response
 
 ```
 [
@@ -183,59 +207,77 @@ parameters
     "days": {       // 参加指定日の登録後状態
     {
         "dayOfMonth": 1,    // 日にち
-        "weekday": "SUN",   // 曜日
-        "events" {
-            "lunch" : {
-                "hasJoined" : "true",   // 参加済みか
-                "isFixed" : "true",     // 確定済みのイベントか
-                "participantCount" : "3",  // 参加者数
-                "_links" {
-                    "join" :  {
-                        "method": "POST",
-                        "href": "/join",
-                        "parameters": {
-                            "v": 0.1,
-                            "group": "group12345",
-                            "year": 2015,
-                            "month": 12,
-                            "day": 1,
-                            "eventType": "lunch",
-                            "token": "token12345"
-                        }
-                    },
-                }
-            }
-            "dinner" : {
-                "hasJoined" : "false",
-                "isFixed" : "true",
-                "participantCount" : "5",
-                "_links" {
-                    "join" :  {
-                        "method": "POST",
-                        "href": "/join",
-                        "parameters": {
-                            "v": 0.1,
-                            "group": "group12345",
-                            "year": 2015,
-                            "month": 12,
-                            "day": 1,
-                            "eventType": "dinner",
-                            "token": "token12345"
-                        }
-                    },
-                }
-            }
-        }
+		"weekday": "SUN",   // 曜日
+	    "events" {
+	        "lunch" : {
+	            "hasJoined" : "true",   // 参加済みか
+	            "isFixed" : "true",     // 確定済みのイベントか
+	            "participantCount" : "3",  // 参加者数
+	            "_links" {
+	                "join" :  {
+	                    "method": "POST",
+	                    "href": "/join",
+			        	"headers": {
+							"Content-Type": "application/json",
+							"X-Meshido-ApiVerion": "1.0",
+							"X-Meshido-UsrToken" : "token12345"
+			        	},
+	                    "parameters": {
+	                        "group": "group12345",
+	                        "year": 2015,
+	                        "month": 12,
+	                        "day": 1,
+	                        "eventType": "lunch"
+	                    }
+	                },
+	            }
+	        }
+	        "dinner" : {
+	            "hasJoined" : "false",
+	            "isFixed" : "true",
+	            "participantCount" : "5",
+	            "_links" {
+	                "join" :  {
+	                    "method": "POST",
+	                    "href": "/join",
+			        	"headers": {
+							"Content-Type": "application/json",
+							"X-Meshido-ApiVerion": "1.0",
+							"X-Meshido-UsrToken" : "token12345"
+			        	},
+	                    "parameters": {
+	                        "group": "group12345",
+	                        "year": 2015,
+	                        "month": 12,
+	                        "day": 1,
+	                        "eventType": "dinner"
+	                    }
+	                },
+	            }
+	        }
+	    }
     },
-    "_links": {
-        "self" : { "method": "GET", "href": "/calender/v/0.1/group/group12345/year/2015/month/12/day/1" },
-    },
+    "_links": "",
     "_embeded": "",
   }
 ]
 ```
 
-### ユーザー情報 [GET /me/v/{verion}/token/{token}]
+### ユーザー情報 [GET /me]
+
+* header
+
+|key|value|
+|:--|:----|
+|Content-Type|Application/json|
+|X-Meshido-ApiVerion|1.0|
+|X-Meshido-UserToken|[/login]で取得したtoken|
+
+* parameters
+
+no parameters needed.
+
+* response
 
 ```
 [
@@ -246,7 +288,14 @@ parameters
     	"email": "hogehoge@example.com",
     },
     "_links": {
-        "self" : { "href": "/me/v/0.1/token/{token}" },
+    	"method": "GET",
+    	"href": "/me",
+    	"headers": {
+			"Content-Type": "application/json",
+			"X-Meshido-ApiVerion": "1.0",
+			"X-Meshido-UsrToken" : "token12345"
+    	},
+    	"parameters" : ""
     },
     "_embeded": ""
   }
