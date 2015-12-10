@@ -52,7 +52,7 @@
 ]
 ```
 
-### カレンダー [GET /group/{group}/calender]
+### カレンダー [GET /group/{group}/calendar]
 
 現在月の予定一覧を取得する。
 
@@ -142,7 +142,7 @@ dayまで指定すると、その日だけ取ってくる。
     "_links": {
         "self" : { 
         	"method": "GET",
-        	"href": "/group/group12345/calender/year/2015/month/12",
+        	"href": "/group/group12345/calendar/year/2015/month/12",
         	"headers": {
 				"Content-Type": "application/json",
 				"X-Meshido-ApiVerion": "1.0",
@@ -151,7 +151,7 @@ dayまで指定すると、その日だけ取ってくる。
     	},
         "next" : { 
         	"method": "GET",
-        	"href": "/group/group12345/calender/year/2016/month/1",
+        	"href": "/group/group12345/calendar/year/2016/month/1",
         	"headers": {
 				"Content-Type": "application/json",
 				"X-Meshido-ApiVerion": "1.0",
@@ -160,7 +160,7 @@ dayまで指定すると、その日だけ取ってくる。
     	},
         "prev" : { 
         	"method": "GET",
-        	"href": "/group/group12345/calender/year/2015/month/11",
+        	"href": "/group/group12345/calendar/year/2015/month/11",
         	"headers": {
 				"Content-Type": "application/json",
 				"X-Meshido-ApiVerion": "1.0",
