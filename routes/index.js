@@ -1,5 +1,12 @@
 var express = require('express');
 var router = express.Router();
+var randtoken = require('rand-token');
+
+var API_VERSION = 1.0;
+
+var mongoskin = require('mongoskin');
+var db = mongoskin.db('mongodb://localhost:27017/meshido');
+db.bind('user');
 
 /* GET home page. */
 router.get('/', function (req, res) {
@@ -8,64 +15,51 @@ router.get('/', function (req, res) {
 	});
 });
 
-router.post('/login', function(req, res, next) {
-  req.session.user = {
-    name: req.body.name,
-    email: req.body.email,
-    groupe: req.body.group,
-  };
+router.post('/login', function (req, res) {
+	// <TODO> accepting request and validation
 
-  var response =   {
-    "user": {
-        "name": req.session.user.name,
-        "email": req.session.user.email,
-    },
-    "_links": {
-        "self" : { "method": "GET", "href": "/me" },
-        "calendar" : { "method": "GET", "href": "/group/group12345/calender" },
-        "logout" : { "method": "GET", "href": "/logout" },
-    },
-    "_embeded": "",
-  }
+	// generate token
+	var userToken = randtoken.uid(24);
 
-  res.send(response);
-});
+	// create user array
+	var newUser = {
+		name: req.body.name,
+		email: req.body.email,
+		token: userToken
+	};
 
-router.get('/me', function(req, res, next) {
+	// insert new user record
+	db.user.insert(newUser, function (err, result) {
+		if (err) {
+			console.log('faild to insert user');
+			throw err;
+		}
+		if (result) {
+			console.log('add new user [' + result.insertedIds + ']');
+		}
+	});
 
-  var response = "";
-  if (req.session.user) {
-    response =   {
-      "user": {
-          "name": req.session.user.name,
-          "email": req.session.user.email,
-      },
-      "_links": {
-          "self" : { "method": "GET", "href": "/me" },
-      },
-      "_embeded": "",
-    }
-  } else {
-    response =   {
-      "_links": {
-          "self" : { "method": "GET", "href": "/me" },
-      },
-      "_embeded": "",
-    }
-  }
+	// create response body
+	var response = {
+		v: API_VERSION,
+		token: userToken,
+		user: newUser,
+		_links: {
+			self: {
+				method: 'GET',
+				href: '/me',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-Meshido-ApiVerion': API_VERSION,
+					'X-Meshido-UsrToken': newUser.token
+				},
+				parameters: ''
+			}
+		},
+		_embeded: ''
+	};
 
-  res.send(response);
-});
-
-router.get('/logout', function(req, res, next) {
-  req.session.destroy();
-
-  var response =   {
-    "_links": "",
-    "_embeded": "",
-  }
-
-  res.send(response);
+	res.send(response);
 });
 
 module.exports = router;
