@@ -1,5 +1,7 @@
 # meshido-backend
 
+[![Build Status](https://travis-ci.org/TeijigoTeaTime/meshido-backend.svg?branch=master)](https://travis-ci.org/TeijigoTeaTime/meshido-backend)
+
 ## 開発環境
 
 ### 構築手順
