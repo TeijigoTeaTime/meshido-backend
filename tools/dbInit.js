@@ -16,11 +16,11 @@ db.collection('users').removeAsync()
 })
 .then(function () {
 	console.log('insert initial data for group');
-	return db.collection('groups').insertAsync({groupId: 'test1', name: 'テストグループ1'});
+	return db.collection('groups').insertAsync({id: 'test1', name: 'テストグループ1'});
 })
 .then(function () {
 	console.log('insert initial data for group');
-	return db.collection('groups').insertAsync({groupId: 'test2', name: 'テストグループ2'});
+	return db.collection('groups').insertAsync({id: 'test2', name: 'テストグループ2'});
 })
 
 .then(function () {
