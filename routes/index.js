@@ -6,6 +6,7 @@ var mongoskin = require('mongoskin');
 var db = mongoskin.db('mongodb://localhost:27017/meshido');
 var bluebird = require('bluebird');
 bluebird.promisifyAll(mongoskin);
+var validator = require('validator');
 
 var API_VERSION = '1.0';
 
@@ -16,9 +17,37 @@ router.get('/', function (req, res) {
 	});
 });
 
+/**
+ * validate login params
+ */
+var isValidLoginParameters = function (req) {
+	var isValid = true;
+	if (validator.isNull(req.body.name)) {
+		isValid = false;
+	}
+	if (validator.isNull(req.body.email)) {
+		isValid = false;
+	}
+	if (!validator.isEmail(req.body.email)) {
+		isValid = false;
+	}
+	if (validator.isNull(req.body.group)) {
+		isValid = false;
+	}
+	return isValid;
+};
+
+/**
+ * login
+ */
 router.post('/login', function (req, res) {
-	// <TODO> accepting request and validation
+	// accepting request and validation
 	// <TODO> 上位処理に移行予定
+	if (!isValidLoginParameters(req)) {
+		var errBody = {error: 'some parameters are not correct.'};
+		res.status(400).send(errBody);
+		return;
+	}
 
 	// generate token
 	var userToken = randtoken.uid(24);
@@ -75,6 +104,9 @@ router.post('/login', function (req, res) {
 	});
 });
 
+/**
+ * getting authorized user json
+ */
 router.get('/me', function (req, res) {
 	// accepting request and validation
 	// <TODO> 上位処理に移行予定
@@ -131,6 +163,9 @@ router.get('/me', function (req, res) {
 	);
 });
 
+/**
+ * logout
+ */
 router.get('/logout', function (req, res) {
 	// accepting request and validation
 	// <TODO> 上位処理に移行予定
