@@ -7,9 +7,11 @@
     "start": "node ./bin/www",
     "start-dev": "node-dev ./bin/www",
     "gulp": "gulp",
-    "lint": "gulp lint"
+    "lint": "gulp lint",
+    "init-db": "node ./tools/dbInit.js"
   },
   "dependencies": {
+    "bluebird": "^3.0.6",
     "body-parser": "~1.13.2",
     "cookie-parser": "~1.3.5",
     "debug": "~2.2.0",
