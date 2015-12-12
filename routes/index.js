@@ -118,4 +118,33 @@ router.get('/me', function (req, res) {
 	);
 });
 
+router.get('/logout', function (req, res) {
+	// accepting request and validation
+	// <TODO> 上位処理に移行予定
+	var xToken = req.get('X-Meshido-UserToken');
+	if (xToken === undefined) {
+		var errBody = {error: 'no token was send.'};
+		res.status(400).send(errBody);
+		return;
+	}
+
+	db.user.remove({token: xToken},
+		function (err, result) {
+			if (err) {
+				console.log('faild to retrieve user');
+				throw err;
+			}
+
+			// create response body
+			var response = {
+				v: API_VERSION,
+				message: "logout was succeeded."
+			};
+
+			res.send(response);
+		}
+	);
+});
+
+
 module.exports = router;
