@@ -1,10 +1,13 @@
 {
   "name": "meshido-backend",
   "version": "0.1.0",
+  "license": "UNLICENSED",
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "start-dev": "node-dev ./bin/www"
+    "start-dev": "node-dev ./bin/www",
+    "gulp": "gulp",
+    "lint": "gulp lint"
   },
   "dependencies": {
     "body-parser": "~1.13.2",
@@ -13,10 +16,16 @@
     "express": "~4.13.1",
     "express-session": "^1.12.1",
     "jade": "~1.11.0",
-    "mongodb": "^2.0.49",
-    "mongoskin": "^2.0.3",
+    "kerberos": "~0.0.17",
+    "mongodb": "~2.0.50",
+    "mongoskin": "~2.0.3",
     "morgan": "~1.6.1",
     "node-dev": "^2.7.1",
     "serve-favicon": "~2.3.0"
+  },
+  "devDependencies": {
+    "eslint-config-xo": "^0.8.0",
+    "gulp": "^3.9.0",
+    "gulp-eslint": "^1.1.1"
   }
 }
