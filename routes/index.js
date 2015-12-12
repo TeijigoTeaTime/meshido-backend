@@ -129,7 +129,7 @@ router.get('/logout', function (req, res) {
 	}
 
 	db.user.remove({token: xToken},
-		function (err, result) {
+		function (err) {
 			if (err) {
 				console.log('faild to retrieve user');
 				throw err;
@@ -138,13 +138,12 @@ router.get('/logout', function (req, res) {
 			// create response body
 			var response = {
 				v: API_VERSION,
-				message: "logout was succeeded."
+				message: 'logout was succeeded.'
 			};
 
 			res.send(response);
 		}
 	);
 });
-
 
 module.exports = router;
