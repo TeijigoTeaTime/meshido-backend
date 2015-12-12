@@ -103,7 +103,8 @@ router.get('/me', function (req, res) {
 			// exists.
 			var me = {
 				name: result.name,
-				email: result.email
+				email: result.email,
+				group: result.group
 			};
 
 			// create response body
