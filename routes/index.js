@@ -60,6 +60,9 @@ router.post('/login', function (req, res) {
 		token: userToken
 	};
 
+	var me = [];
+	var isNeedCreateNewUser = true;
+
 	Promise.resolve()
 	.then(function () {
 		// check if group is exists.
@@ -76,34 +79,40 @@ router.post('/login', function (req, res) {
 		// check if user has been already exists
 		return db.collection('users').findOneAsync({email: newUser.email, group: newUser.group})
 			.then(function (result) {
-				if (result !== null) {
-					var errBody = {error: 'user has been already exist.'};
-					res.status(409).send(errBody);
-					return Promise.reject(errBody);
+				if (result === null) {
+					me = {
+						name: newUser.name,
+						email: newUser.email,
+						group: newUser.group,
+						token: newUser.token
+					};
+				} else {
+					isNeedCreateNewUser = false;
+					me = {
+						name: result.name,
+						email: result.email,
+						group: result.group,
+						token: result.token
+					};
 				}
 			});
 	})
 	.then(function () {
-		// insert new user record
-		return db.collection('users').insertAsync(newUser)
-			.then(function (result) {
-				if (result) {
-					console.log('add new user [' + result.insertedIds + ']');
-				}
-			});
+		if (isNeedCreateNewUser) {
+			// insert new user record
+			return db.collection('users').insertAsync(newUser)
+				.then(function (result) {
+					if (result) {
+						console.log('add new user [' + result.insertedIds + ']');
+					}
+				});
+		}
 	})
 	.then(function () {
-		var me = {
-			name: newUser.name,
-			email: newUser.email,
-			group: newUser.group,
-			token: newUser.token
-		};
-
 		// create response body
 		var response = {
 			v: API_VERSION,
-			token: userToken,
+			token: me.token,
 			user: me,
 			_links: {
 				self: {
