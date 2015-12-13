@@ -69,6 +69,16 @@ router.post('/login', function (req, res) {
 			return Promise.reject(errBody);
 		}
 
+		// check if user has been already exists
+		return db.collection('users').findOneAsync({email: newUser.email, group: newUser.group});
+	})
+	.then(function (result) {
+		if (result !== null) {
+			var errBody = {error: 'user has been already exist.'};
+			res.status(409).send(errBody);
+			return Promise.reject(errBody);
+		}
+
 		// insert new user record
 		return db.collection('users').insertAsync(newUser);
 	})
@@ -77,11 +87,18 @@ router.post('/login', function (req, res) {
 			console.log('add new user [' + result.insertedIds + ']');
 		}
 
+		var me = {
+			name: newUser.name,
+			email: newUser.email,
+			group: newUser.group,
+			token: newUser.token
+		};
+
 		// create response body
 		var response = {
 			v: API_VERSION,
 			token: userToken,
-			user: newUser,
+			user: me,
 			_links: {
 				self: {
 					method: 'GET',
@@ -113,7 +130,7 @@ router.get('/me', function (req, res) {
 	var xToken = req.get('X-Meshido-UserToken');
 	if (xToken === undefined) {
 		var errBody = {error: 'no token was send.'};
-		res.status(400).send(errBody);
+		res.status(401).send(errBody);
 		return;
 	}
 
@@ -136,7 +153,8 @@ router.get('/me', function (req, res) {
 			var me = {
 				name: result.name,
 				email: result.email,
-				group: result.group
+				group: result.group,
+				token: result.token
 			};
 
 			// create response body
