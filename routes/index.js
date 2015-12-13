@@ -60,33 +60,39 @@ router.post('/login', function (req, res) {
 		token: userToken
 	};
 
-	// check if group is exists.
-	db.collection('groups').findOneAsync({id: newUser.group})
-	.then(function (result) {
-		if (result === null) {
-			var errBody = {error: 'group does not exists.'};
-			res.status(404).send(errBody);
-			return Promise.reject(errBody);
-		}
-
+	Promise.resolve()
+	.then(function () {
+		// check if group is exists.
+		return db.collection('groups').findOneAsync({id: newUser.group})
+			.then(function (result) {
+				if (result === null) {
+					var errBody = {error: 'group does not exists.'};
+					res.status(404).send(errBody);
+					return Promise.reject(errBody);
+				}
+			});
+	})
+	.then(function () {
 		// check if user has been already exists
-		return db.collection('users').findOneAsync({email: newUser.email, group: newUser.group});
+		return db.collection('users').findOneAsync({email: newUser.email, group: newUser.group})
+			.then(function (result) {
+				if (result !== null) {
+					var errBody = {error: 'user has been already exist.'};
+					res.status(409).send(errBody);
+					return Promise.reject(errBody);
+				}
+			});
 	})
-	.then(function (result) {
-		if (result !== null) {
-			var errBody = {error: 'user has been already exist.'};
-			res.status(409).send(errBody);
-			return Promise.reject(errBody);
-		}
-
+	.then(function () {
 		// insert new user record
-		return db.collection('users').insertAsync(newUser);
+		return db.collection('users').insertAsync(newUser)
+			.then(function (result) {
+				if (result) {
+					console.log('add new user [' + result.insertedIds + ']');
+				}
+			});
 	})
-	.then(function (result) {
-		if (result) {
-			console.log('add new user [' + result.insertedIds + ']');
-		}
-
+	.then(function () {
 		var me = {
 			name: newUser.name,
 			email: newUser.email,
