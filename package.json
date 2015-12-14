@@ -4,8 +4,8 @@
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
-    "start": "NODE_ENV=heroku node ./bin/www",
-    "start-dev": "NODE_ENV=development node-dev ./bin/www",
+    "start": "node ./bin/www",
+    "start-dev": "NODE_ENV='development' MONGO_URI='mongodb://localhost:27017/meshido' TZ='Asia/Tokyo' node-dev ./bin/www",
     "gulp": "gulp",
     "lint": "gulp lint",
     "init-db": "node ./tools/dbInit.js"
