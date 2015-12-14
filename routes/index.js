@@ -1,9 +1,10 @@
 var express = require('express');
 var router = express.Router();
+var config = require('config');
 var randtoken = require('rand-token');
-
 var mongoskin = require('mongoskin');
-var db = mongoskin.db('mongodb://localhost:27017/meshido');
+var mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/meshido';
+var db = mongoskin.db(mongoURI);
 var bluebird = require('bluebird');
 bluebird.promisifyAll(mongoskin);
 var validator = require('validator');
@@ -13,7 +14,7 @@ var API_VERSION = '1.0';
 /* GET home page. */
 router.get('/', function (req, res) {
 	res.render('index', {
-		title: 'Express'
+		title: 'Express(' + config.app.info + ')'
 	});
 });
 
