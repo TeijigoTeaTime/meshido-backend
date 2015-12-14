@@ -9,7 +9,13 @@ if (!apiKey) {
 /**
  * USAGE:
  *
+ * a) Specific date
+ *
  *   $ node batch/eventNotifier.js {jstYear} {jstMonth} {jstDay} {jstHour}
+ *
+ * b) Current date
+ *
+ *   $ node batch/eventNotifier.js `env TZ='Asia/Tokyo' date +'%Y %m %d %H'`
  */
 var jstYear = Number(process.argv[2]);
 var jstMonth = Number(process.argv[3]);
