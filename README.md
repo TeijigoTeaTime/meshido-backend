@@ -18,6 +18,12 @@ npm install
 npm run start-dev
 ```
 
+### DB初期化＋テスト用データ投入
+
+```
+npm run init-db
+```
+
 ### ログイン [POST /login]
 
 * header
@@ -50,9 +56,10 @@ npm run start-dev
     "user": {
         "name": "Taro Yamada",
         "email": "foo@example.com",
+        "group": "group12345", // グループID
     }
     "_links": {
-        "self" : { 
+        "self" : {
             "method": "GET",
             "href": "/me",
             "headers": {
@@ -77,7 +84,6 @@ npm run start-dev
 
 |key|value|
 |:--|:----|
-|Content-Type|Application/json|
 |X-Meshido-ApiVerion|1.0|
 |X-Meshido-UserToken|[/login]で取得したtoken|
 
@@ -156,7 +162,7 @@ dayまで指定すると、その日だけ取ってくる。
         :
     },
     "_links": {
-        "self" : { 
+        "self" : {
             "method": "GET",
             "href": "/group/group12345/calendar/year/2015/month/12",
             "headers": {
@@ -165,7 +171,7 @@ dayまで指定すると、その日だけ取ってくる。
                 "X-Meshido-UsrToken" : "token12345"
             }
         },
-        "next" : { 
+        "next" : {
             "method": "GET",
             "href": "/group/group12345/calendar/year/2016/month/1",
             "headers": {
@@ -174,7 +180,7 @@ dayまで指定すると、その日だけ取ってくる。
                 "X-Meshido-UsrToken" : "token12345"
             }
         },
-        "prev" : { 
+        "prev" : {
             "method": "GET",
             "href": "/group/group12345/calendar/year/2015/month/11",
             "headers": {
@@ -285,13 +291,12 @@ dayまで指定すると、その日だけ取ってくる。
 
 |key|value|
 |:--|:----|
-|Content-Type|Application/json|
 |X-Meshido-ApiVerion|1.0|
 |X-Meshido-UserToken|[/login]で取得したtoken|
 
 * parameters
 
-no parameters needed.
+なし
 
 * response
 
@@ -302,6 +307,7 @@ no parameters needed.
     "user" : {
         "name": "Taro Yamada",
         "email": "hogehoge@example.com",
+        "group": "group12345",
     },
     "_links": {
         "method": "GET",
