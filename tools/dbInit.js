@@ -1,5 +1,13 @@
+// starting log
+console.log('--- Meshido DB initializing. ---');
+console.log(' env:NODE_ENV=' + process.env.NODE_ENV);
+console.log(' env:MONGO_URI=' + process.env.MONGO_URI);
+console.log(' env:TZ=' + process.env.TZ);
+console.log('--------------------------------');
+
 var mongoskin = require('mongoskin');
-var db = mongoskin.db('mongodb://localhost:27017/meshido');
+var mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/meshido';
+var db = mongoskin.db(mongoURI);
 var bluebird = require('bluebird');
 bluebird.promisifyAll(mongoskin);
 
