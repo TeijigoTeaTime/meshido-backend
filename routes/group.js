@@ -55,6 +55,7 @@ router.post('/:group/event/join', function (req, res) {
 	}
 
 	var user = [];
+	var joinedEvents = [];
 	var days = [];
 	var isNeedCreateJoinRecord = true;
 
@@ -125,6 +126,25 @@ router.post('/:group/event/join', function (req, res) {
 		}
 	})
 	.then(function () {
+		// retribe my joined events
+		return db.collection('events').find(
+			{
+				'group': req.params.group,
+				'year': req.body.year,
+				'month': req.body.month,
+				'day': req.body.day,
+				'user.email': user.email
+			}
+		)
+		.toArrayAsync()
+		.then(function (result) {
+			result.forEach(function (aRow) {
+				// key is 'day-type'
+				joinedEvents[aRow.day + '-' + aRow.type] = aRow;
+			});
+		});
+	})
+	.then(function () {
 		// !!!! TOO dirty !!!
 		// aggregate event's participants
 		var aggregateCondition =
@@ -169,16 +189,31 @@ router.post('/:group/event/join', function (req, res) {
 					var date = moment([aRow._id.y, aRow._id.m, aRow._id.d].join('-'));
 
 					if (days[0] === undefined) {
+						// initialize default data
 						days.push(
 							{
 								dayOfMonth: date.format('D'),
-								weekday: date.format('ddd')
+								weekday: date.format('ddd'),
+								dinner: {
+									hasJoined: false,
+									isFixed: false,
+									participantCount: 0,
+									// <TODO> まだ
+									_links: []
+								},
+								lunch: {
+									hasJoined: false,
+									isFixed: false,
+									participantCount: 0,
+									// <TODO> まだ
+									_links: []
+								}
 							}
 						);
 					}
 
 					days[0][aRow._id.type] = {
-						hasJoined: true,
+						hasJoined: (joinedEvents[date.format('D') + '-' + aRow._id.type] !== undefined),
 						// <TODO> 確定フラグをバッチで作ってもらわにゃならん
 						isFixed: false,
 						participantCount: aRow.count,
