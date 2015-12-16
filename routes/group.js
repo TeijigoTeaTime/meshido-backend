@@ -2,12 +2,14 @@ var express = require('express');
 var router = express.Router();
 
 var mongoskin = require('mongoskin');
-var db = mongoskin.db('mongodb://localhost:27017/meshido');
+var mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/meshido';
+var db = mongoskin.db(mongoURI);
 var bluebird = require('bluebird');
 bluebird.promisifyAll(mongoskin);
 var validator = require('validator');
+var moment = require('moment');
 
-// var API_VERSION = '1.0';
+var API_VERSION = '1.0';
 
 /**
  * validate join params
@@ -53,6 +55,8 @@ router.post('/:group/event/join', function (req, res) {
 	}
 
 	var user = [];
+	var days = [];
+	var isNeedCreateJoinRecord = true;
 
 	Promise.resolve()
 	.then(function () {
@@ -91,40 +95,109 @@ router.post('/:group/event/join', function (req, res) {
 				'user.email': user.email
 			}
 		)
-			.then(function (result) {
-				if (result !== null) {
-					var errBody = {error: 'user has already joined.'};
-					res.status(401).send(errBody);
-					return Promise.reject(errBody);
-				}
-			});
+		.then(function (result) {
+			if (result !== null) {
+				isNeedCreateJoinRecord = false;
+			}
+		});
 	})
 	.then(function () {
 		// join event
-		var event = {
-			group: req.params.group,
-			year: req.body.year,
-			month: req.body.month,
-			day: req.body.day,
-			type: req.body.eventType,
-			user: {
-				name: user.name,
-				email: user.email
-			}
-		};
-
-		return db.collection('events').insertAsync(event)
-			.then(function (result) {
-				if (result) {
-					console.log('add new event [' + result.insertedIds + ']');
+		if (isNeedCreateJoinRecord) {
+			var event = {
+				group: req.params.group,
+				year: req.body.year,
+				month: req.body.month,
+				day: req.body.day,
+				type: req.body.eventType,
+				user: {
+					name: user.name,
+					email: user.email
 				}
+			};
+
+			return db.collection('events').insertAsync(event)
+				.then(function (result) {
+					if (result) {
+						console.log('add new event [' + result.insertedIds + ']');
+					}
+				});
+		}
+	})
+	.then(function () {
+		// !!!! TOO dirty !!!
+		// aggregate event's participants
+		var aggregateCondition =
+			[
+				// matching condition
+				{
+					$match: {
+						group: req.params.group,
+						year: req.body.year,
+						month: req.body.month,
+						day: req.body.day
+					}
+				},
+				// sorting condition
+				{
+					$sort: {
+						day: -1,
+						type: 1
+					}
+				},
+				// grouping condition
+				{
+					$group: {
+						_id: {
+							group: '$group',
+							y: '$year',
+							m: '$month',
+							d: '$day',
+							type: '$type'
+						},
+						// grouping function
+						count: {
+							$sum: 1
+						}
+					}
+				}
+			];
+
+		return db.collection('events').aggregateAsync(aggregateCondition)
+			.then(function (result) {
+				result.forEach(function (aRow) {
+					var date = moment([aRow._id.y, aRow._id.m, aRow._id.d].join('-'));
+
+					if (days[0] === undefined) {
+						days.push(
+							{
+								dayOfMonth: date.format('D'),
+								weekday: date.format('ddd')
+							}
+						);
+					}
+
+					days[0][aRow._id.type] = {
+						hasJoined: true,
+						// <TODO> 確定フラグをバッチで作ってもらわにゃならん
+						isFixed: false,
+						participantCount: aRow.count,
+						// <TODO> まだ
+						_links: []
+					};
+				});
 			});
 	})
 	.then(function () {
 		// create response body
-		var response = 'now implementing.';
+		var response = {
+			v: API_VERSION,
+			result: 'success',
+			days: days
+		};
 		res.send(response);
-	})	.catch(function (err) {
+	})
+	.catch(function (err) {
 		console.log(err);
 	});
 });

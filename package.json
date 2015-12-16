@@ -20,6 +20,7 @@
     "express-session": "^1.12.1",
     "jade": "~1.11.0",
     "kerberos": "~0.0.17",
+    "moment": "^2.10.6",
     "mongodb": "~2.0.50",
     "mongoskin": "~2.0.3",
     "morgan": "~1.6.1",
