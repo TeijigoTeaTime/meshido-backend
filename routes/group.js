@@ -265,4 +265,65 @@ router.post('/:group/event/join', function (req, res) {
 	});
 });
 
+
+
+/**
+ * calendar
+ */
+var getCalendarAction = function (req, res) {
+
+	var days = [];
+
+	Promise.resolve()
+	.then(function () {
+		// create mock response
+		var daysInMonth = moment().daysInMonth();
+		// initializing this month's days
+		for (i=1; i <= daysInMonth; i++) {
+			var aDayMoment = moment().date(i);
+			var aDay =
+				{
+					dayOfMonth: parseInt(aDayMoment.format('D'), 10),
+					weekday: aDayMoment.format('ddd'),
+					dinner: {
+						hasJoined: false,
+						isFixed: isFixedDate(aDayMoment.format('YYYY-MM-DD'), 'dinner'),
+						participantCount: 0,
+						// <TODO> まだ
+						_links: []
+					},
+					lunch: {
+						hasJoined: false,
+						isFixed: isFixedDate(aDayMoment.format('YYYY-MM-DD'), 'lunch'),
+						participantCount: 0,
+						// <TODO> まだ
+						_links: []
+					}
+				};
+			days.push(aDay);
+		}
+
+		// apply mock data
+		for (i=0; i < daysInMonth; i++) {
+			days[i].dinner.hasJoined = (i % 3 === 0);
+			days[i].dinner.participantCount = i % 4;
+			days[i].lunch.hasJoined = (i % 5 === 0);
+			days[i].lunch.participantCount = i % 6;
+		}
+
+		res.send(days);
+	})
+	.catch(function (err) {
+		console.log(err);
+	});
+};
+
+/**
+ * routing calendar
+ */
+router.get('/:group/calendar', getCalendarAction);
+router.get('/:group/calendar/year/:year', getCalendarAction);
+router.get('/:group/calendar/year/:year/month/:month', getCalendarAction);
+router.get('/:group/calendar/year/:year/month/:month/day/:day', getCalendarAction);
+
 module.exports = router;
