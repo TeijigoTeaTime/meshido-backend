@@ -16,11 +16,11 @@ console.log('remove all user data');
 db.collection('users').removeAsync()
 .then(function () {
 	console.log('remove all groups data');
-	return db.collection('groups').find().toArrayAsync();
+	return db.collection('groups').removeAsync();
 })
 .then(function () {
 	console.log('remove all events data');
-	return db.collection('events').find().toArrayAsync();
+	return db.collection('events').removeAsync();
 })
 .then(function () {
 	console.log('insert initial data for group');
