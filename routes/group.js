@@ -9,7 +9,7 @@ bluebird.promisifyAll(mongoskin);
 var validator = require('validator');
 var moment = require('moment');
 
-var API_VERSION = '1.0';
+var API_VERSION = 1.0;
 
 /**
  * dicide the date sent whether fixed
@@ -59,6 +59,12 @@ var isValidJoinParameters = function (req) {
 router.post('/:group/event/join', function (req, res) {
 	// accepting request and validation
 	// <TODO> 上位処理に移行予定
+	var xToken = req.get('X-Meshido-UserToken');
+	if (xToken === undefined) {
+		res.status(401).send({error: 'no token was send.'});
+		return;
+	}
+
 	if (!isValidJoinParameters(req)) {
 		res.status(400).send({error: 'some parameters are not correct.'});
 		return;
@@ -67,12 +73,6 @@ router.post('/:group/event/join', function (req, res) {
 	// check if the requested event has been fixed event
 	if (isFixedDate(req.body.year + '-' + req.body.month + '-' + req.body.day, req.body.eventType)) {
 		res.status(400).send({error: 'already fixed.'});
-		return;
-	}
-
-	var xToken = req.get('X-Meshido-UserToken');
-	if (xToken === undefined) {
-		res.status(401).send({error: 'no token was send.'});
 		return;
 	}
 
@@ -99,7 +99,7 @@ router.post('/:group/event/join', function (req, res) {
 			.then(function (result) {
 				if (result === null) {
 					var errBody = {error: 'user does not exists.'};
-					res.status(404).send(errBody);
+					res.status(401).send(errBody);
 					return Promise.reject(errBody);
 				}
 
@@ -216,7 +216,7 @@ router.post('/:group/event/join', function (req, res) {
 						// initialize default data
 						days.push(
 							{
-								dayOfMonth: date.format('D'),
+								dayOfMonth: parseInt(date.format('D')),
 								weekday: date.format('ddd'),
 								dinner: {
 									hasJoined: false,

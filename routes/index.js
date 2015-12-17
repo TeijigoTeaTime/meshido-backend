@@ -9,7 +9,7 @@ var bluebird = require('bluebird');
 bluebird.promisifyAll(mongoskin);
 var validator = require('validator');
 
-var API_VERSION = '1.0';
+var API_VERSION = 1.0;
 
 /* GET home page. */
 router.get('/', function (req, res) {
@@ -206,7 +206,7 @@ router.get('/logout', function (req, res) {
 	var xToken = req.get('X-Meshido-UserToken');
 	if (xToken === undefined) {
 		var errBody = {error: 'no token was send.'};
-		res.status(400).send(errBody);
+		res.status(401).send(errBody);
 		return;
 	}
 
