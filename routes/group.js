@@ -65,34 +65,12 @@ router.post('/:group/event/join', function (req, res) {
 		return;
 	}
 
-	if (!isValidJoinParameters(req)) {
-		res.status(400).send({error: 'some parameters are not correct.'});
-		return;
-	}
-
-	// check if the requested event has been fixed event
-	if (isFixedDate(req.body.year + '-' + req.body.month + '-' + req.body.day, req.body.eventType)) {
-		res.status(400).send({error: 'already fixed.'});
-		return;
-	}
-
 	var user = [];
 	var joinedEvents = [];
 	var days = [];
 	var isNeedCreateJoinRecord = true;
 
 	Promise.resolve()
-	.then(function () {
-		// check if group exists.
-		return db.collection('groups').findOneAsync({id: req.params.group})
-			.then(function (result) {
-				if (result === null) {
-					var errBody = {error: 'group does not exists.'};
-					res.status(404).send(errBody);
-					return Promise.reject(errBody);
-				}
-			});
-	})
 	.then(function () {
 		// check if user exists
 		return db.collection('users').findOneAsync({token: xToken})
@@ -104,6 +82,32 @@ router.post('/:group/event/join', function (req, res) {
 				}
 
 				user = result;
+			});
+	})
+	.then(function () {
+		if (!isValidJoinParameters(req)) {
+			var errBody = {error: 'some parameters are not correct.'};
+			res.status(400).send(errBody);
+			return Promise.reject(errBody);
+		}
+	})
+	.then(function () {
+		// check if the requested event has been fixed event
+		if (isFixedDate(req.body.year + '-' + req.body.month + '-' + req.body.day, req.body.eventType)) {
+			var errBody = {error: 'already fixed.'};
+			res.status(400).send(errBody);
+			return Promise.reject(errBody);
+		}
+	})
+	.then(function () {
+		// check if group exists.
+		return db.collection('groups').findOneAsync({id: req.params.group})
+			.then(function (result) {
+				if (result === null) {
+					var errBody = {error: 'group does not exists.'};
+					res.status(404).send(errBody);
+					return Promise.reject(errBody);
+				}
 			});
 	})
 	.then(function () {
