@@ -311,7 +311,13 @@ var getCalendarAction = function (req, res) {
 			days[i].lunch.participantCount = i % 6;
 		}
 
-		res.send(days);
+		// create response body
+		var response = {
+			v: API_VERSION,
+			days: days
+		};
+
+		res.send(response);
 	})
 	.catch(function (err) {
 		console.log(err);
