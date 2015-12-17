@@ -216,7 +216,7 @@ router.post('/:group/event/join', function (req, res) {
 						// initialize default data
 						days.push(
 							{
-								dayOfMonth: parseInt(date.format('D')),
+								dayOfMonth: parseInt(date.format('D'), 10),
 								weekday: date.format('ddd'),
 								dinner: {
 									hasJoined: false,
