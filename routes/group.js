@@ -12,6 +12,22 @@ var moment = require('moment');
 var API_VERSION = '1.0';
 
 /**
+ * dicide the date sent whether fixed
+ */
+var isFixedDate = function (ymdStr, evenType) {
+	var fixDate;
+	// fix time
+	if (evenType === 'lunch') {
+		fixDate = moment(ymdStr + ' 11:00:00');
+	} else {
+		fixDate = moment(ymdStr + ' 17:00:00');
+	}
+	var currentDate = moment();
+	// compare current date
+	return fixDate.isBefore(currentDate);
+};
+
+/**
  * validate join params
  */
 var isValidJoinParameters = function (req) {
@@ -45,6 +61,12 @@ router.post('/:group/event/join', function (req, res) {
 	// <TODO> 上位処理に移行予定
 	if (!isValidJoinParameters(req)) {
 		res.status(400).send({error: 'some parameters are not correct.'});
+		return;
+	}
+
+	// check if the requested event has been fixed event
+	if (isFixedDate(req.body.year + '-' + req.body.month + '-' + req.body.day, req.body.eventType)) {
+		res.status(400).send({error: 'already fixed.'});
 		return;
 	}
 
@@ -186,7 +208,9 @@ router.post('/:group/event/join', function (req, res) {
 		return db.collection('events').aggregateAsync(aggregateCondition)
 			.then(function (result) {
 				result.forEach(function (aRow) {
-					var date = moment([aRow._id.y, aRow._id.m, aRow._id.d].join('-'));
+					var dateYMDStr = [aRow._id.y, aRow._id.m, aRow._id.d].join('-');
+					var date = moment(dateYMDStr);
+					var eventType = aRow._id.type;
 
 					if (days[0] === undefined) {
 						// initialize default data
@@ -196,14 +220,14 @@ router.post('/:group/event/join', function (req, res) {
 								weekday: date.format('ddd'),
 								dinner: {
 									hasJoined: false,
-									isFixed: false,
+									isFixed: isFixedDate(dateYMDStr, 'dinner'),
 									participantCount: 0,
 									// <TODO> まだ
 									_links: []
 								},
 								lunch: {
 									hasJoined: false,
-									isFixed: false,
+									isFixed: isFixedDate(dateYMDStr, 'lunch'),
 									participantCount: 0,
 									// <TODO> まだ
 									_links: []
@@ -212,10 +236,10 @@ router.post('/:group/event/join', function (req, res) {
 						);
 					}
 
-					days[0][aRow._id.type] = {
-						hasJoined: (joinedEvents[date.format('D') + '-' + aRow._id.type] !== undefined),
-						// <TODO> 確定フラグをバッチで作ってもらわにゃならん
-						isFixed: false,
+					days[0][eventType] = {
+						hasJoined: (joinedEvents[date.format('D') + '-' + eventType] !== undefined),
+						// compare eventdate and current date
+						isFixed: isFixedDate(dateYMDStr, eventType),
 						participantCount: aRow.count,
 						// <TODO> まだ
 						_links: []
