@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "start-dev": "node-dev ./bin/www",
+    "start-dev": "NODE_ENV='development' MONGO_URI='mongodb://localhost:27017/meshido' TZ='Asia/Tokyo' node-dev ./bin/www",
     "gulp": "gulp",
     "lint": "gulp lint",
     "init-db": "node ./tools/dbInit.js"
@@ -13,12 +13,14 @@
   "dependencies": {
     "bluebird": "^3.0.6",
     "body-parser": "~1.13.2",
+    "config": "^1.17.1",
     "cookie-parser": "~1.3.5",
     "debug": "~2.2.0",
     "express": "~4.13.1",
     "express-session": "^1.12.1",
     "jade": "~1.11.0",
     "kerberos": "~0.0.17",
+    "moment": "^2.10.6",
     "mongodb": "~2.0.50",
     "mongoskin": "~2.0.3",
     "morgan": "~1.6.1",
