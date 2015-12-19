@@ -1,4 +1,4 @@
-var sendgrid  = require('sendgrid')(process.env.MESHIDO_SENDGRID_API_KEY);
+var sendgrid = require('sendgrid')(process.env.MESHIDO_SENDGRID_API_KEY);
 var mongoskin = require('mongoskin');
 var db = mongoskin.db(process.env.MONGO_URI);
 var bluebird = require('bluebird');
@@ -33,8 +33,7 @@ if (jstHour === 11) {
 	event.ja = 'ディナー';
 } else {
 	// バッチ起動時刻が、'11時', '17時' でない場合はなにもせず終了
-	console.log('It is not the time to send notification. ('
-		+ jstYear + '-' + jstMonth + '-' + jstDay + ' ' + jstHour + ')');
+	console.log('It is not the time to send notification. (' + jstYear + '-' + jstMonth + '-' + jstDay + ' ' + jstHour + ')');
 	process.exit(0);
 }
 
@@ -56,7 +55,7 @@ db.collection('events').find({
 	var promises = [];
 	events.forEach(function (e) {
 		var body = '';
-		body += e.user.name + 'さん、' + event.ja + 'どう？' + '<br />';
+		body += e.user.name + 'さん、' + event.ja + 'どう？<br />';
 		body += '<br />';
 		body += content;
 
@@ -71,7 +70,7 @@ db.collection('events').find({
 		console.error(err);
 		process.exit(1);
 	});
-}, function(err) {
+}, function (err) {
 	console.error(err);
 	process.exit(1);
 });

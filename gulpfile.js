@@ -11,7 +11,8 @@ gulp.task('eslint', function () {
 				'node'
 			],
 			rules: {
-				'new-cap': [2, {'capIsNewExceptions': ['express.Router']}]
+				'new-cap': [2, {'capIsNewExceptions': ['express.Router']}],
+				'operator-linebreak': [2, 'before', {'overrides': {'=': 'after'}}]
 			}
 		}))
 		.pipe(eslint.format())
