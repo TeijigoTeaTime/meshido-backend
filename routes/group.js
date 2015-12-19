@@ -265,4 +265,190 @@ router.post('/:group/event/join', function (req, res) {
 	});
 });
 
+/**
+ * validate join params
+ */
+var isValidCalendarParameters = function (req, year, month) {
+	var isValid = true;
+	if (validator.isNull(req.params.group)) {
+		isValid = false;
+	}
+	if (!validator.isDate(year + '-' + month + '-01')) {
+		isValid = false;
+	}
+	return isValid;
+};
+
+/**
+ * calendar
+ */
+var getCalendarAction = function (req, res) {
+	// accepting request and validation
+	// <TODO> 上位処理に移行予定
+	var xToken = req.get('X-Meshido-UserToken');
+	if (xToken === undefined) {
+		res.status(401).send({error: 'no token was send.'});
+		return;
+	}
+
+	var currentMoment = moment();
+	var searchYear = (req.params.year === undefined) ? currentMoment.format('YYYY') : req.params.year;
+	var searchMonth = (req.params.month === undefined) ? currentMoment.format('M') : req.params.month;
+
+	var user = [];
+	var joinedEvents = [];
+	var days = [];
+
+	Promise.resolve()
+	.then(function () {
+		// check if user exists
+		return db.collection('users').findOneAsync({token: xToken})
+			.then(function (result) {
+				if (result === null) {
+					var errBody = {error: 'user does not exists.'};
+					res.status(401).send(errBody);
+					return Promise.reject(errBody);
+				}
+
+				user = result;
+			});
+	})
+	.then(function () {
+		if (!isValidCalendarParameters(req, searchYear, searchMonth)) {
+			var errBody = {error: 'some parameters are not correct.'};
+			res.status(400).send(errBody);
+			return Promise.reject(errBody);
+		}
+	})
+	.then(function () {
+		// check if group exists.
+		return db.collection('groups').findOneAsync({id: req.params.group})
+			.then(function (result) {
+				if (result === null) {
+					var errBody = {error: 'group does not exists.'};
+					res.status(404).send(errBody);
+					return Promise.reject(errBody);
+				}
+			});
+	})
+	.then(function () {
+		// retribe my joined events
+		return db.collection('events').find(
+			{
+				'group': req.params.group,
+				'year': searchYear,
+				'month': searchMonth,
+				'user.email': user.email
+			}
+		)
+		.toArrayAsync()
+		.then(function (result) {
+			result.forEach(function (aRow) {
+				// key is 'day-type'
+				joinedEvents[aRow.day + '-' + aRow.type] = aRow;
+			});
+		});
+	})
+	.then(function () {
+		var searchMoment = moment().year(searchYear).month(searchMonth - 1);
+		// create mock response
+		var daysInMonth = searchMoment.daysInMonth();
+
+		// initializing this month's days
+		for (var i = 1; i <= daysInMonth; i++) {
+			var aDayMoment = searchMoment.date(i);
+			var aDay =
+				{
+					dayOfMonth: parseInt(aDayMoment.format('D'), 10),
+					weekday: aDayMoment.format('ddd'),
+					dinner: {
+						hasJoined: false,
+						isFixed: isFixedDate(aDayMoment.format('YYYY-MM-DD'), 'dinner'),
+						participantCount: 0,
+						// <TODO> まだ
+						_links: []
+					},
+					lunch: {
+						hasJoined: false,
+						isFixed: isFixedDate(aDayMoment.format('YYYY-MM-DD'), 'lunch'),
+						participantCount: 0,
+						// <TODO> まだ
+						_links: []
+					}
+				};
+			days.push(aDay);
+		}
+	})
+	.then(function () {
+		// aggregate event's participants
+		var aggregateCondition =
+			[
+				// matching condition
+				{
+					$match: {
+						group: req.params.group,
+						year: searchYear,
+						month: searchMonth
+					}
+				},
+				// sorting condition
+				{
+					$sort: {
+						day: -1,
+						type: 1
+					}
+				},
+				// grouping condition
+				{
+					$group: {
+						_id: {
+							group: '$group',
+							y: '$year',
+							m: '$month',
+							d: '$day',
+							type: '$type'
+						},
+						// grouping function
+						count: {
+							$sum: 1
+						}
+					}
+				}
+			];
+
+		return db.collection('events').aggregateAsync(aggregateCondition)
+			.then(function (result) {
+				result.forEach(function (aRow) {
+					var dateYMDStr = [aRow._id.y, aRow._id.m, aRow._id.d].join('-');
+					var date = moment(dateYMDStr);
+					var aDayIndex = aRow._id.d - 1;
+					var eventType = aRow._id.type;
+
+					var anEvent = days[aDayIndex][eventType];
+					anEvent.hasJoined = (joinedEvents[date.format('D') + '-' + eventType] !== undefined);
+					anEvent.participantCount = aRow.count;
+				});
+			});
+	})
+	.then(function () {
+		// create response body
+		var response = {
+			v: API_VERSION,
+			days: days
+		};
+
+		res.send(response);
+	})
+	.catch(function (err) {
+		console.log(err);
+	});
+};
+
+/**
+ * routing calendar
+ */
+router.get('/:group/calendar', getCalendarAction);
+router.get('/:group/calendar/year/:year', getCalendarAction);
+router.get('/:group/calendar/year/:year/month/:month', getCalendarAction);
+
 module.exports = router;
