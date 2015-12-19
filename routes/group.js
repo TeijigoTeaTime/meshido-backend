@@ -451,4 +451,212 @@ router.get('/:group/calendar', getCalendarAction);
 router.get('/:group/calendar/year/:year', getCalendarAction);
 router.get('/:group/calendar/year/:year/month/:month', getCalendarAction);
 
+/**
+ * validate cancel params
+ */
+var isValidCancelParameters = function (req) {
+	var isValid = true;
+	if (validator.isNull(req.params.group)) {
+		isValid = false;
+	}
+	if (validator.isNull(req.body.year)) {
+		isValid = false;
+	}
+	if (validator.isNull(req.body.month)) {
+		isValid = false;
+	}
+	if (validator.isNull(req.body.day)) {
+		isValid = false;
+	}
+	if (req.body.eventType !== 'lunch' && req.body.eventType !== 'dinner') {
+		isValid = false;
+	}
+	if (!validator.isDate(req.body.year + '-' + req.body.month + '-' + req.body.day)) {
+		isValid = false;
+	}
+	return isValid;
+};
+
+/**
+ * cancel event
+ */
+router.post('/:group/event/cancel', function (req, res) {
+	// accepting request and validation
+	// <TODO> 上位処理に移行予定
+	var xToken = req.get('X-Meshido-UserToken');
+	if (xToken === undefined) {
+		res.status(401).send({error: 'no token was send.'});
+		return;
+	}
+
+	var user = [];
+	var joinedEvents = [];
+	var days = [];
+
+	Promise.resolve()
+	.then(function () {
+		// check if user exists
+		return db.collection('users').findOneAsync({token: xToken})
+			.then(function (result) {
+				if (result === null) {
+					var errBody = {error: 'user does not exists.'};
+					res.status(401).send(errBody);
+					return Promise.reject(errBody);
+				}
+
+				user = result;
+			});
+	})
+	.then(function () {
+		if (!isValidCancelParameters(req)) {
+			var errBody = {error: 'some parameters are not correct.'};
+			res.status(400).send(errBody);
+			return Promise.reject(errBody);
+		}
+	})
+	.then(function () {
+		// check if the requested event has been fixed event
+		if (isFixedDate(req.body.year + '-' + req.body.month + '-' + req.body.day, req.body.eventType)) {
+			var errBody = {error: 'already fixed.'};
+			res.status(400).send(errBody);
+			return Promise.reject(errBody);
+		}
+	})
+	.then(function () {
+		// check if group exists.
+		return db.collection('groups').findOneAsync({id: req.params.group})
+			.then(function (result) {
+				if (result === null) {
+					var errBody = {error: 'group does not exists.'};
+					res.status(404).send(errBody);
+					return Promise.reject(errBody);
+				}
+			});
+	})
+	.then(function () {
+		// check if user has already joined
+		return db.collection('events').removeAsync(
+			{
+				'group': req.params.group,
+				'year': req.body.year,
+				'month': req.body.month,
+				'day': req.body.day,
+				'type': req.body.eventType,
+				'user.email': user.email
+			}
+		);
+	})
+	.then(function () {
+		// retribe my joined events
+		return db.collection('events').find(
+			{
+				'group': req.params.group,
+				'year': req.body.year,
+				'month': req.body.month,
+				'day': req.body.day,
+				'user.email': user.email
+			}
+		)
+		.toArrayAsync()
+		.then(function (result) {
+			result.forEach(function (aRow) {
+				// key is 'day-type'
+				joinedEvents[aRow.day + '-' + aRow.type] = aRow;
+			});
+		});
+	})
+	.then(function () {
+		// !!!! TOO dirty !!!
+		// aggregate event's participants
+		var aggregateCondition =
+			[
+				// matching condition
+				{
+					$match: {
+						group: req.params.group,
+						year: req.body.year,
+						month: req.body.month,
+						day: req.body.day
+					}
+				},
+				// sorting condition
+				{
+					$sort: {
+						day: -1,
+						type: 1
+					}
+				},
+				// grouping condition
+				{
+					$group: {
+						_id: {
+							group: '$group',
+							y: '$year',
+							m: '$month',
+							d: '$day',
+							type: '$type'
+						},
+						// grouping function
+						count: {
+							$sum: 1
+						}
+					}
+				}
+			];
+
+		var dateYMDStr = [req.body.year, req.body.month, req.body.day].join('-');
+		var date = moment(dateYMDStr);
+
+		// initialize default data
+		days.push(
+			{
+				dayOfMonth: parseInt(date.format('D'), 10),
+				weekday: date.format('ddd'),
+				dinner: {
+					hasJoined: false,
+					isFixed: isFixedDate(dateYMDStr, 'dinner'),
+					participantCount: 0,
+					// <TODO> まだ
+					_links: []
+				},
+				lunch: {
+					hasJoined: false,
+					isFixed: isFixedDate(dateYMDStr, 'lunch'),
+					participantCount: 0,
+					// <TODO> まだ
+					_links: []
+				}
+			}
+		);
+
+		return db.collection('events').aggregateAsync(aggregateCondition)
+			.then(function (result) {
+				result.forEach(function (aRow) {
+					var eventType = aRow._id.type;
+
+					days[0][eventType] = {
+						hasJoined: (joinedEvents[date.format('D') + '-' + eventType] !== undefined),
+						// compare eventdate and current date
+						isFixed: isFixedDate(dateYMDStr, eventType),
+						participantCount: aRow.count,
+						// <TODO> まだ
+						_links: []
+					};
+				});
+			});
+	})
+	.then(function () {
+		// create response body
+		var response = {
+			v: API_VERSION,
+			result: 'success',
+			days: days
+		};
+		res.send(response);
+	})
+	.catch(function (err) {
+		console.log(err);
+	});
+});
+
 module.exports = router;
