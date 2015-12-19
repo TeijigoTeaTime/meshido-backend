@@ -51,7 +51,6 @@ db.collection('events').find({
 		process.exit(0);
 	}
 
-
 	var content = '';
 
 	events.forEach(function (e) {
