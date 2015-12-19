@@ -1,10 +1,8 @@
-// SendGridのAPI KEY
-// 環境変数 "MESHIDO_SENDGRID_API_KEY" で指定する
-var apiKey = process.env.MESHIDO_SENDGRID_API_KEY;
-if (!apiKey) {
-	console.error('API KEY is not specified.');
-	process.exit(1);
-}
+var sendgrid  = require('sendgrid')(process.env.MESHIDO_SENDGRID_API_KEY);
+var mongoskin = require('mongoskin');
+var db = mongoskin.db(process.env.MONGO_URI);
+var bluebird = require('bluebird');
+bluebird.promisifyAll(mongoskin);
 
 /**
  * USAGE:
@@ -34,71 +32,35 @@ if (jstHour === 11) {
 	event.type = 'dinner';
 	event.ja = 'ディナー';
 } else {
-	// バッチ起動時刻が、"11時", "17時" でない場合はなにもせず終了
-	console.log('skip: ' + jstYear + '-' + jstMonth + '-' + jstDay + ' ' + jstHour);
+	// バッチ起動時刻が、'11時', '17時' でない場合はなにもせず終了
+	console.log('It is not the time to send notification. ('
+		+ jstYear + '-' + jstMonth + '-' + jstDay + ' ' + jstHour + ')');
 	process.exit(0);
 }
 
-// var sendgrid  = require('sendgrid')(apiKey);
-// FIXME: スタブ
-var sendgrid = {
-	send: function (params, callback) {
-		console.log('[sendgrid.send] ' + JSON.stringify(params));
-
-		callback(null, {
-			message: 'success'
-		});
-	}
-};
-// var mongoskin = require('mongoskin');
-// var db = mongoskin.db('mongodb://localhost:27017/meshido');
-// var bluebird = require('bluebird');
-// bluebird.promisifyAll(mongoskin);
-// FIXME: スタブ
-var db = {
-	collection: function (collection) {
-		console.log('[db.collection] ' + collection);
-
-		return {
-			find: function (condition) {
-				console.log('[db.collection.find] ' + JSON.stringify(condition));
-
-				return {
-					then: function (done) {
-						done([
-							{
-								email: 'taro.yamada@example.com',
-								name: 'Taro Yamada'
-							},
-							{
-								email: 'hanako.yamada@example.com',
-								name: 'Hanako Yamada'
-							}
-						]);
-					}
-				};
-			}
-		};
-	}
-};
-
 db.collection('events').find({
-	group: 'group',
+	group: 'test1',
 	year: jstYear,
 	month: jstMonth,
 	day: jstDay,
 	type: event.type
-}).then(function (users) {
+}).toArrayAsync().then(function (events) {
 	var content = '';
-	users.forEach(function (user) {
-		content += user.name + '\r\n';
-		content += user.email + '\r\n';
-		content += '\r\n';
+
+	events.forEach(function (e) {
+		content += e.user.name + '<br />';
+		content += e.user.email + '<br />';
+		content += '<br />';
 	});
 
 	var promises = [];
-	users.forEach(function (user) {
-		var promise = sendNotify(user, content);
+	events.forEach(function (e) {
+		var body = '';
+		body += e.user.name + 'さん、' + event.ja + 'どう？' + '<br />';
+		body += '<br />';
+		body += content;
+
+		var promise = sendNotify(e.user.email, 'メシどう？', body);
 		promises.push(promise);
 	});
 
@@ -109,7 +71,7 @@ db.collection('events').find({
 		console.error(err);
 		process.exit(1);
 	});
-}, function (err) {
+}, function(err) {
 	console.error(err);
 	process.exit(1);
 });
@@ -117,16 +79,17 @@ db.collection('events').find({
 /**
  * 通知メールを送信する
  *
- * @param {Object} user ユーザ情報( {email: 'メアド', name: '名前'} )
- * @param {String} content メール本文
+ * @param {Object} toAddr 送信先アドレス
+ * @param {String} subject 件名
+ * @param {String} body メール本文(HTML)
  * @returns {Promise}
  */
-function sendNotify(user, content) {
+function sendNotify(toAddr, subject, body) {
 	var params = {
-		to: user.email,
-		from: user.email,
-		subject: 'メシどう？',
-		text: content
+		to: toAddr,
+		from: toAddr,
+		subject: subject,
+		html: body
 	};
 
 	return new Promise(function (resolve, reject) {
