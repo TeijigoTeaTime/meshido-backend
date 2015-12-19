@@ -9,16 +9,17 @@ bluebird.promisifyAll(mongoskin);
  *
  * a) Specific date
  *
- *   $ node batch/eventNotifier.js {jstYear} {jstMonth} {jstDay} {jstHour}
+ *   $ node batch/eventNotifier.js {jstYear} {jstMonth} {jstDay} {jstHour} {threshold}
  *
  * b) Current date
  *
- *   $ node batch/eventNotifier.js `env TZ='Asia/Tokyo' date +'%Y %m %d %H'`
+ *   $ node batch/eventNotifier.js `env TZ='Asia/Tokyo' date +'%Y %m %d %H'` {threshold}
  */
 var jstYear = Number(process.argv[2]);
 var jstMonth = Number(process.argv[3]);
 var jstDay = Number(process.argv[4]);
 var jstHour = Number(process.argv[5]);
+var threshold = Number(process.argv[6]) || 2;
 
 var event = {
 	type: '',
@@ -44,6 +45,13 @@ db.collection('events').find({
 	day: jstDay,
 	type: event.type
 }).toArrayAsync().then(function (events) {
+	if (events.length < threshold) {
+		// 参加人数が {threshold} 未満の場合は通知しない（イベント成立しない）
+		console.log('Participant count (' + events.length + ') is less than threshold (' + threshold + ').');
+		process.exit(0);
+	}
+
+
 	var content = '';
 
 	events.forEach(function (e) {
