@@ -424,12 +424,9 @@ var getCalendarAction = function (req, res) {
 					var aDayIndex = aRow._id.d - 1;
 					var eventType = aRow._id.type;
 
-					days[aDayIndex][eventType] = {
-						hasJoined: (joinedEvents[date.format('D') + '-' + eventType] !== undefined),
-						participantCount: aRow.count,
-						// <TODO> まだ
-						_links: []
-					};
+					var anEvent = days[aDayIndex][eventType];
+					anEvent.hasJoined = (joinedEvents[date.format('D') + '-' + eventType] !== undefined);
+					anEvent.participantCount = aRow.count;
 				});
 			});
 	})
