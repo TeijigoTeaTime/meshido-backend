@@ -1,6 +1,5 @@
 var express = require('express');
 var router = express.Router();
-var config = require('config');
 var randtoken = require('rand-token');
 var mongoskin = require('mongoskin');
 var mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/meshido';
@@ -13,8 +12,8 @@ var API_VERSION = 1.0;
 
 /* GET home page. */
 router.get('/', function (req, res) {
-	res.render('index', {
-		title: 'Express(' + config.app.info + ')'
+	res.send({
+		status: 'ok'
 	});
 });
 
