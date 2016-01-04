@@ -4,6 +4,8 @@ var db = mongoskin.db(process.env.MONGO_URI);
 var bluebird = require('bluebird');
 bluebird.promisifyAll(mongoskin);
 
+var procGroup = process.env.PROC_GROUP || 'test1';
+
 /**
  * USAGE:
  *
@@ -39,7 +41,7 @@ if (jstHour === 11) {
 }
 
 db.collection('events').find({
-	group: 'test1',
+	group: procGroup,
 	year: jstYear,
 	month: jstMonth,
 	day: jstDay,
